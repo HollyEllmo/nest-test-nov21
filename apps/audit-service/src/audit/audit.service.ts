@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import { Metadata } from '@grpc/grpc-js';
+import { v4 as uuidv4 } from 'uuid';
 import { InjectModel } from '@nestjs/sequelize';
 import { AuditLog } from './models/audit-log.model';
 
@@ -9,19 +11,33 @@ export class AuditService {
     private auditLogModel: typeof AuditLog,
   ) {}
 
-  async logAction(data: {
-    action: string;
-    entity_type: number;
-    entity_id: string;
-    request_id: string;
-    timestamp: string;
-  }): Promise<{ success: boolean; message: string }> {
+  async logAction(
+    data: {
+      action: string;
+      entity_type?: number;
+      entityType?: number;
+      entity_id?: string;
+      entityId?: string;
+      request_id?: string;
+      requestId?: string;
+      timestamp: string;
+    },
+    metadata?: Metadata,
+  ): Promise<{ success: boolean; message: string }> {
     try {
+      const entityType = data.entity_type ?? data.entityType;
+      const entityId = data.entity_id ?? data.entityId;
+      const requestIdFromData = data.request_id ?? data.requestId;
+      const requestIdMeta = metadata?.get('x-request-id')?.[0] as
+        | string
+        | undefined;
+      const requestId = requestIdFromData || requestIdMeta || uuidv4();
+
       await this.auditLogModel.create({
         action: data.action,
-        entity_type: data.entity_type,
-        entity_id: data.entity_id,
-        request_id: data.request_id,
+        entity_type: entityType,
+        entity_id: entityId,
+        request_id: requestId,
         timestamp: new Date(data.timestamp),
       } as any);
 

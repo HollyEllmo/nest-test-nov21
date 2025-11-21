@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/sequelize';
 import { ClientGrpc } from '@nestjs/microservices';
 import { Metadata } from '@grpc/grpc-js';
 import { firstValueFrom } from 'rxjs';
+import { v4 as uuidv4 } from 'uuid';
 import { User } from './models/user.model';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 
@@ -10,9 +11,12 @@ interface AuditService {
   logAction(
     data: {
       action: string;
-      entity_type: number;
-      entity_id: string;
-      request_id: string;
+      entityType?: number;
+      entity_type?: number;
+      entityId?: string;
+      entity_id?: string;
+      requestId?: string;
+      request_id?: string;
       timestamp: string;
     },
     metadata?: Metadata,
@@ -101,8 +105,9 @@ export class UsersService implements OnModuleInit {
     correlationId: string,
     timestamp: Date,
   ): Promise<void> {
+    const requestId = correlationId || uuidv4();
     const metadata = new Metadata();
-    metadata.add('x-request-id', correlationId);
+    metadata.add('x-request-id', requestId);
 
     try {
       await firstValueFrom(
@@ -111,7 +116,7 @@ export class UsersService implements OnModuleInit {
             action,
             entity_type: AUDIT_ENTITY_USER,
             entity_id: entityId,
-            request_id: correlationId,
+            request_id: requestId,
             timestamp: timestamp.toISOString(),
           },
           metadata,
