@@ -27,4 +27,4 @@ COPY apps/audit-service/.env.example ./apps/audit-service/.env.example
 ENV NODE_ENV=production
 EXPOSE 3001 50051
 
-CMD ["node", "dist/apps/audit-service/main.js"]
+CMD ["node", "dist/apps/audit-service/apps/audit-service/src/main.js"]
