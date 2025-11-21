@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Metadata } from '@grpc/grpc-js';
+import { Op } from 'sequelize';
 import { v4 as uuidv4 } from 'uuid';
 import { InjectModel } from '@nestjs/sequelize';
 import { AuditLog } from './models/audit-log.model';
+import { QueryAuditLogsDto } from './dto/query-audit-logs.dto';
 
 @Injectable()
 export class AuditService {
@@ -49,11 +51,52 @@ export class AuditService {
     return { message: 'pong' };
   }
 
-  async findAll(filters?: any): Promise<AuditLog[]> {
-    // Basic implementation for debug endpoint
-    return this.auditLogModel.findAll({
-      limit: filters?.limit || 100,
-      order: [['created_at', 'DESC']],
+  async findAll(query: QueryAuditLogsDto): Promise<{
+    items: AuditLog[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    const {
+      page = 1,
+      limit = 50,
+      entity_type,
+      action,
+      timestamp_from,
+      timestamp_to,
+    } = query;
+
+    const normalizedLimit = Math.min(limit, 200);
+    const offset = (page - 1) * normalizedLimit;
+
+    const where: any = {};
+    if (entity_type !== undefined) {
+      where.entity_type = entity_type;
+    }
+    if (action) {
+      where.action = action;
+    }
+    if (timestamp_from || timestamp_to) {
+      where.timestamp = {};
+      if (timestamp_from) where.timestamp[Op.gte] = new Date(timestamp_from);
+      if (timestamp_to) where.timestamp[Op.lte] = new Date(timestamp_to);
+    }
+
+    const { rows, count } = await this.auditLogModel.findAndCountAll({
+      where,
+      order: [
+        ['timestamp', 'DESC'],
+        ['id', 'DESC'],
+      ],
+      limit: normalizedLimit,
+      offset,
     });
+
+    return {
+      items: rows,
+      total: count,
+      page,
+      limit: normalizedLimit,
+    };
   }
 }

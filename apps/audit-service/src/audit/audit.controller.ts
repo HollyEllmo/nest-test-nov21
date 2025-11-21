@@ -1,9 +1,12 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
+import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { Metadata } from '@grpc/grpc-js';
 import { AuditService } from './audit.service';
+import { QueryAuditLogsDto } from './dto/query-audit-logs.dto';
 
 @Controller('audit')
+@ApiTags('audit')
 export class AuditController {
   constructor(private readonly auditService: AuditService) {}
 
@@ -28,7 +31,8 @@ export class AuditController {
 
   // HTTP debug endpoint
   @Get('logs')
-  async getLogs() {
-    return this.auditService.findAll();
+  @ApiOkResponse({ description: 'List audit logs with pagination and filters' })
+  async getLogs(@Query() query: QueryAuditLogsDto) {
+    return this.auditService.findAll(query);
   }
 }
