@@ -1,4 +1,9 @@
-import { Injectable, Inject, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  OnModuleInit,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { ClientGrpc } from '@nestjs/microservices';
 import { Metadata } from '@grpc/grpc-js';
@@ -120,7 +125,11 @@ export class UsersService implements OnModuleInit {
   }
 
   async findOne(id: string): Promise<User> {
-    return this.userModel.findByPk(id);
+    const user = await this.userModel.findByPk(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
   }
 
   async update(
@@ -129,29 +138,31 @@ export class UsersService implements OnModuleInit {
     correlationId: string,
   ): Promise<User> {
     const user = await this.userModel.findByPk(id);
-    if (user) {
-      await user.update(updateUserDto as any);
-      await this.logAuditEvent(
-        AuditAction.UserUpdated,
-        user.id,
-        correlationId,
-        user.updatedAt,
-      );
+    if (!user) {
+      throw new NotFoundException('User not found');
     }
+    await user.update(updateUserDto as any);
+    await this.logAuditEvent(
+      AuditAction.UserUpdated,
+      user.id,
+      correlationId,
+      user.updatedAt,
+    );
     return user;
   }
 
   async remove(id: string, correlationId: string): Promise<void> {
     const user = await this.userModel.findByPk(id);
-    if (user) {
-      await user.destroy(); // Soft delete
-      await this.logAuditEvent(
-        AuditAction.UserDeleted,
-        user.id,
-        correlationId,
-        new Date(),
-      );
+    if (!user) {
+      throw new NotFoundException('User not found');
     }
+    await user.destroy(); // Soft delete
+    await this.logAuditEvent(
+      AuditAction.UserDeleted,
+      user.id,
+      correlationId,
+      new Date(),
+    );
   }
 
   private async logAuditEvent(

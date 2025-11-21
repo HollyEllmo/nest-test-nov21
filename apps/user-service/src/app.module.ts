@@ -6,6 +6,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { UsersModule } from './users/users.module';
 import { HealthModule } from './health/health.module';
 import { getDatabaseConfig } from './config/database.config';
+import { ApiKeyGuard } from './auth/api-key.guard';
 
 @Module({
   imports: [
@@ -30,6 +31,10 @@ import { getDatabaseConfig } from './config/database.config';
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ApiKeyGuard,
     },
   ],
 })
