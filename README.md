@@ -1,61 +1,32 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+## Микросервисы пользователи + аудит (NestJS, gRPC, Postgres)
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Два сервиса: user-service (HTTP API + аудит действий через gRPC) и audit-service (gRPC сервер + HTTP для просмотра логов). У каждого свой Postgres. Миграции — `sequelize-cli`.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+### Быстрый старт локально (без Docker)
+1. Установить зависимости: `npm install`.
+2. Скопировать `.env` из `apps/*/.env.example` и настроить (порты БД, API_KEY, AUDIT_SERVICE_URL и т.д.).
+3. Применить миграции:
+   - `npm run migrate:user`
+   - `npm run migrate:audit`
+4. Запустить сервисы:
+   - `npm run start:user-service` (HTTP 3000, Swagger `/docs`, health `/health/live`, `/health/ready`)
+   - `npm run start:audit-service` (HTTP 3001, gRPC 50051, HTTP `/audit/logs`)
 
-## Description
+### Запуск в Docker
+1. Собрать и поднять всё:  
+   `docker compose up --build` (или `-d` для фона).
+2. Запустить выборочно:  
+   `docker compose up --build user-service postgres-user`  
+   `docker compose up --build audit-service postgres-audit`
+3. Остановить: `docker compose down` (или `stop` для остановки без удаления).
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+### Конфигурация
+- user-service: порты 3000, подключение к Postgres (`DB_*`), аудит — `AUDIT_SERVICE_URL` (в Docker: `audit-service:50051`), API-ключ в `X-API-Key` (кроме `/health`, `/docs`).
+- audit-service: порты 3001 (HTTP) и 50051 (gRPC), БД отдельная.
+- gRPC proto: `libs/proto/src/audit.proto` (копируется в сборку).
 
-## Installation
-
-```bash
-$ npm install
-```
-
-## Docker
-
-Build and run both services with Postgres:
-
-```bash
-docker compose up --build
-```
-
-Run only a specific service (e.g. user-service) with its DB:
-
-```bash
-docker compose up --build user-service postgres-user
-```
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).
+### Полезное
+- Пагинация/фильтры пользователей: `page/limit`, сортировка `sort_by/sort_dir`, фильтры `name/email`, `created_from/to`.
+- Аудит CRUD пишется в `audit_logs`, лог `/audit/logs` с пагинацией и фильтрами.
+- Soft delete включён (`paranoid`), удалённые пользователи не возвращаются.
+- Rate limit включён глобально (Throttler), API-key guard глобальный, health публичный. Swagger открыт.
