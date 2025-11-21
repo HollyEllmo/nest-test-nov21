@@ -19,12 +19,18 @@ export class ApiKeyGuard implements CanActivate {
     ]);
     if (isPublic) return true;
 
+    const request = context.switchToHttp().getRequest();
+    const path: string = request?.path || '';
+    // Allow swagger docs endpoints without API key
+    if (path.startsWith('/docs') || path.startsWith('/docs-json')) {
+      return true;
+    }
+
     const apiKey = process.env.API_KEY;
     if (!apiKey) {
       throw new ForbiddenException('API key is not configured');
     }
 
-    const request = context.switchToHttp().getRequest();
     const provided = request.headers['x-api-key'];
 
     if (provided && provided === apiKey) {

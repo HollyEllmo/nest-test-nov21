@@ -19,6 +19,7 @@ import {
 import { UsersService } from './users.service';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import { QueryUsersDto } from './dto/query-users.dto';
+import { UserResponseDto, UsersListResponseDto } from './dto/user-response.dto';
 import { CorrelationId, CorrelationIdInterceptor } from '@app/common';
 
 @Controller('users')
@@ -28,7 +29,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  @ApiCreatedResponse({ description: 'User created' })
+  @ApiCreatedResponse({ description: 'User created', type: UserResponseDto })
   @ApiBadRequestResponse({ description: 'Validation failed' })
   create(
     @Body() createUserDto: CreateUserDto,
@@ -38,20 +39,20 @@ export class UsersController {
   }
 
   @Get()
-  @ApiOkResponse({ description: 'List users' })
+  @ApiOkResponse({ description: 'List users', type: UsersListResponseDto })
   findAll(@Query() query: QueryUsersDto) {
     return this.usersService.findAll(query);
   }
 
   @Get(':id')
-  @ApiOkResponse({ description: 'Get user by id' })
+  @ApiOkResponse({ description: 'Get user by id', type: UserResponseDto })
   @ApiNotFoundResponse({ description: 'User not found' })
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(id);
   }
 
   @Patch(':id')
-  @ApiOkResponse({ description: 'Update user' })
+  @ApiOkResponse({ description: 'Update user', type: UserResponseDto })
   @ApiBadRequestResponse({ description: 'Validation failed' })
   @ApiNotFoundResponse({ description: 'User not found' })
   update(
