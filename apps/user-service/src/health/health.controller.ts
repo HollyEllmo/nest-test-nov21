@@ -8,12 +8,14 @@ import {
 import { Inject } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
+import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 
 interface AuditService {
   ping(data: any): any;
 }
 
 @Controller('health')
+@ApiTags('health')
 export class HealthController {
   private auditService: AuditService;
 
@@ -29,12 +31,14 @@ export class HealthController {
 
   @Get('live')
   @HealthCheck()
+  @ApiOkResponse({ description: 'Liveness probe' })
   checkLive() {
     return this.health.check([]);
   }
 
   @Get('ready')
   @HealthCheck()
+  @ApiOkResponse({ description: 'Readiness probe with DB and audit-service checks' })
   async checkReady() {
     return this.health.check([
       () => this.db.pingCheck('database'),

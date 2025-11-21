@@ -8,16 +8,26 @@ import {
   Delete,
   UseInterceptors,
 } from '@nestjs/common';
+import {
+  ApiBadRequestResponse,
+  ApiCreatedResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import { CorrelationId, CorrelationIdInterceptor } from '@app/common';
 
 @Controller('users')
 @UseInterceptors(CorrelationIdInterceptor)
+@ApiTags('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
+  @ApiCreatedResponse({ description: 'User created' })
+  @ApiBadRequestResponse({ description: 'Validation failed' })
   create(
     @Body() createUserDto: CreateUserDto,
     @CorrelationId() correlationId: string,
@@ -26,16 +36,22 @@ export class UsersController {
   }
 
   @Get()
+  @ApiOkResponse({ description: 'List users' })
   findAll() {
     return this.usersService.findAll();
   }
 
   @Get(':id')
+  @ApiOkResponse({ description: 'Get user by id' })
+  @ApiNotFoundResponse({ description: 'User not found' })
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(id);
   }
 
   @Patch(':id')
+  @ApiOkResponse({ description: 'Update user' })
+  @ApiBadRequestResponse({ description: 'Validation failed' })
+  @ApiNotFoundResponse({ description: 'User not found' })
   update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
@@ -45,6 +61,8 @@ export class UsersController {
   }
 
   @Delete(':id')
+  @ApiOkResponse({ description: 'Soft delete user' })
+  @ApiNotFoundResponse({ description: 'User not found' })
   remove(@Param('id') id: string, @CorrelationId() correlationId: string) {
     return this.usersService.remove(id, correlationId);
   }
