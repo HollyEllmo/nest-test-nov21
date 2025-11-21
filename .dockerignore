@@ -1,0 +1,10 @@
+node_modules
+dist
+npm-debug.log
+docker-compose.override.yml
+.git
+.npm
+.cache
+.DS_Store
+*.log
+coverage

@@ -32,30 +32,18 @@
 $ npm install
 ```
 
-## Running the app
+## Docker
+
+Build and run both services with Postgres:
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+docker compose up --build
 ```
 
-## Test
+Run only a specific service (e.g. user-service) with its DB:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+docker compose up --build user-service postgres-user
 ```
 
 ## Support

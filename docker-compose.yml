@@ -1,6 +1,42 @@
-version: '3.8'
-
 services:
+  audit-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.audit-service
+    env_file:
+      - apps/audit-service/.env
+    environment:
+      DB_HOST: postgres-audit
+      DB_PORT: 5432
+      GRPC_PORT: 50051
+      HTTP_PORT: 3001
+    ports:
+      - "3001:3001"
+      - "50051:50051"
+    depends_on:
+      - postgres-audit
+    networks:
+      - nest-network
+
+  user-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.user-service
+    env_file:
+      - apps/user-service/.env
+    environment:
+      DB_HOST: postgres-user
+      DB_PORT: 5432
+      AUDIT_SERVICE_URL: audit-service:50051
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres-user
+      - audit-service
+    networks:
+      - nest-network
+
   postgres-user:
     image: postgres:16-alpine
     container_name: nest-user-db
