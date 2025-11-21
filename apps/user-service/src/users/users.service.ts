@@ -4,8 +4,10 @@ import { ClientGrpc } from '@nestjs/microservices';
 import { Metadata } from '@grpc/grpc-js';
 import { firstValueFrom } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
+import { Op } from 'sequelize';
 import { User } from './models/user.model';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
+import { QueryUsersDto, SORT_DIRECTIONS } from './dto/query-users.dto';
 
 interface AuditService {
   logAction(
@@ -57,8 +59,64 @@ export class UsersService implements OnModuleInit {
     return user;
   }
 
-  async findAll(): Promise<User[]> {
-    return this.userModel.findAll();
+  async findAll(
+    query: QueryUsersDto,
+  ): Promise<{ items: User[]; total: number; page: number; limit: number }> {
+    const {
+      page = 1,
+      limit = 20,
+      sort_by = 'created_at',
+      sort_dir = 'asc',
+      name,
+      email,
+      created_from,
+      created_to,
+    } = query;
+
+    const normalizedLimit = Math.min(limit, 100);
+    const offset = (page - 1) * normalizedLimit;
+
+    const sortFieldMap = {
+      name: 'name',
+      email: 'email',
+      created_at: 'createdAt',
+    } as const;
+    const sortField = sortFieldMap[sort_by] || 'createdAt';
+    const sortDirection = SORT_DIRECTIONS.includes(sort_dir) ? sort_dir : 'asc';
+
+    const where: any = {};
+    if (name) {
+      where.name = { [Op.iLike]: `%${name}%` };
+    }
+    if (email) {
+      where.email = { [Op.iLike]: `%${email}%` };
+    }
+    if (created_from || created_to) {
+      where.createdAt = {};
+      if (created_from) {
+        where.createdAt[Op.gte] = new Date(created_from);
+      }
+      if (created_to) {
+        where.createdAt[Op.lte] = new Date(created_to);
+      }
+    }
+
+    const { rows, count } = await this.userModel.findAndCountAll({
+      where,
+      order: [
+        [sortField, sortDirection.toUpperCase()],
+        ['id', sortDirection.toUpperCase()],
+      ],
+      limit: normalizedLimit,
+      offset,
+    });
+
+    return {
+      items: rows,
+      total: count,
+      page,
+      limit: normalizedLimit,
+    };
   }
 
   async findOne(id: string): Promise<User> {

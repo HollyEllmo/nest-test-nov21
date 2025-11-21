@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseInterceptors,
+  Query,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -17,6 +18,7 @@ import {
 } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
+import { QueryUsersDto } from './dto/query-users.dto';
 import { CorrelationId, CorrelationIdInterceptor } from '@app/common';
 
 @Controller('users')
@@ -37,8 +39,8 @@ export class UsersController {
 
   @Get()
   @ApiOkResponse({ description: 'List users' })
-  findAll() {
-    return this.usersService.findAll();
+  findAll(@Query() query: QueryUsersDto) {
+    return this.usersService.findAll(query);
   }
 
   @Get(':id')
