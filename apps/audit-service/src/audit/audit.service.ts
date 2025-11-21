@@ -14,20 +14,17 @@ export class AuditService {
   async logAction(
     data: {
       action: string;
-      entity_type?: number;
-      entityType?: number;
-      entity_id?: string;
-      entityId?: string;
-      request_id?: string;
-      requestId?: string;
+      entity_type: number;
+      entity_id: string;
+      request_id: string;
       timestamp: string;
     },
     metadata?: Metadata,
   ): Promise<{ success: boolean; message: string }> {
     try {
-      const entityType = data.entity_type ?? data.entityType;
-      const entityId = data.entity_id ?? data.entityId;
-      const requestIdFromData = data.request_id ?? data.requestId;
+      const entityType = data.entity_type;
+      const entityId = data.entity_id;
+      const requestIdFromData = data.request_id;
       const requestIdMeta = metadata?.get('x-request-id')?.[0] as
         | string
         | undefined;

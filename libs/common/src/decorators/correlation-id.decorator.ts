@@ -5,10 +5,10 @@ export const CorrelationId = createParamDecorator(
   (data: unknown, ctx: ExecutionContext): string => {
     const request = ctx.switchToHttp().getRequest();
     const correlationId = request.headers['x-request-id'] || uuidv4();
-    
+
     // Store it in request for later use
     request.correlationId = correlationId;
-    
+
     return correlationId;
   },
 );

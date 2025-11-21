@@ -11,12 +11,9 @@ interface AuditService {
   logAction(
     data: {
       action: string;
-      entityType?: number;
-      entity_type?: number;
-      entityId?: string;
-      entity_id?: string;
-      requestId?: string;
-      request_id?: string;
+      entity_type: number;
+      entity_id: string;
+      request_id: string;
       timestamp: string;
     },
     metadata?: Metadata,
