@@ -45,10 +45,7 @@ export class UsersController {
   }
 
   @Delete(':id')
-  remove(
-    @Param('id') id: string,
-    @CorrelationId() correlationId: string,
-  ) {
+  remove(@Param('id') id: string, @CorrelationId() correlationId: string) {
     return this.usersService.remove(id, correlationId);
   }
 }

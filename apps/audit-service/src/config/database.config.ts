@@ -11,6 +11,7 @@ export const getDatabaseConfig = (
   password: String(configService.get<string>('DB_PASSWORD', 'postgres')),
   database: configService.get<string>('DB_DATABASE'),
   autoLoadModels: true,
-  synchronize: configService.get('NODE_ENV') === 'development',
+  // Schema managed via migrations
+  synchronize: false,
   logging: configService.get('NODE_ENV') === 'development' ? console.log : false,
 });

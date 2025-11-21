@@ -1,12 +1,31 @@
 import { Injectable, Inject, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { ClientGrpc } from '@nestjs/microservices';
+import { Metadata } from '@grpc/grpc-js';
+import { firstValueFrom } from 'rxjs';
 import { User } from './models/user.model';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 
 interface AuditService {
-  logAction(data: any): any;
+  logAction(
+    data: {
+      action: string;
+      entity_type: number;
+      entity_id: string;
+      request_id: string;
+      timestamp: string;
+    },
+    metadata?: Metadata,
+  ): any;
 }
+
+enum AuditAction {
+  UserCreated = 'user_created',
+  UserUpdated = 'user_updated',
+  UserDeleted = 'user_deleted',
+}
+
+const AUDIT_ENTITY_USER = 1;
 
 @Injectable()
 export class UsersService implements OnModuleInit {
@@ -19,15 +38,21 @@ export class UsersService implements OnModuleInit {
   ) {}
 
   onModuleInit() {
-    this.auditService = this.auditClient.getService<AuditService>('AuditService');
+    this.auditService =
+      this.auditClient.getService<AuditService>('AuditService');
   }
 
-  async create(createUserDto: CreateUserDto, correlationId: string): Promise<User> {
+  async create(
+    createUserDto: CreateUserDto,
+    correlationId: string,
+  ): Promise<User> {
     const user = await this.userModel.create(createUserDto as any);
-    
-    // Send audit event (stub for now)
-    // TODO: Implement proper audit logging after audit service is ready
-    
+    await this.logAuditEvent(
+      AuditAction.UserCreated,
+      user.id,
+      correlationId,
+      user.createdAt,
+    );
     return user;
   }
 
@@ -39,13 +64,20 @@ export class UsersService implements OnModuleInit {
     return this.userModel.findByPk(id);
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto, correlationId: string): Promise<User> {
+  async update(
+    id: string,
+    updateUserDto: UpdateUserDto,
+    correlationId: string,
+  ): Promise<User> {
     const user = await this.userModel.findByPk(id);
     if (user) {
       await user.update(updateUserDto as any);
-      
-      // Send audit event (stub)
-      // TODO: Implement audit logging
+      await this.logAuditEvent(
+        AuditAction.UserUpdated,
+        user.id,
+        correlationId,
+        user.updatedAt,
+      );
     }
     return user;
   }
@@ -54,9 +86,45 @@ export class UsersService implements OnModuleInit {
     const user = await this.userModel.findByPk(id);
     if (user) {
       await user.destroy(); // Soft delete
-      
-      // Send audit event (stub)
-      // TODO: Implement audit logging
+      await this.logAuditEvent(
+        AuditAction.UserDeleted,
+        user.id,
+        correlationId,
+        new Date(),
+      );
+    }
+  }
+
+  private async logAuditEvent(
+    action: AuditAction,
+    entityId: string,
+    correlationId: string,
+    timestamp: Date,
+  ): Promise<void> {
+    const metadata = new Metadata();
+    metadata.add('x-request-id', correlationId);
+
+    try {
+      await firstValueFrom(
+        this.auditService.logAction(
+          {
+            action,
+            entity_type: AUDIT_ENTITY_USER,
+            entity_id: entityId,
+            request_id: correlationId,
+            timestamp: timestamp.toISOString(),
+          },
+          metadata,
+        ),
+      );
+    } catch (error) {
+      // Do not block user flow on audit failures; log context for later analysis
+      console.warn('Failed to send audit log', {
+        action,
+        entityId,
+        correlationId,
+        error,
+      });
     }
   }
 }
