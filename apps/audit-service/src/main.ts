@@ -6,13 +6,10 @@ import { resolve } from 'path';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  // Load .env before Nest app bootstraps (works in dev and after build)
   dotenv.config({ path: resolve(process.cwd(), 'apps/audit-service/.env') });
 
-  // Create hybrid application (HTTP + gRPC)
   const app = await NestFactory.create(AppModule);
 
-  // Connect gRPC microservice
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.GRPC,
     options: {
@@ -29,10 +26,8 @@ async function bootstrap() {
     },
   });
 
-  // Start gRPC server
   await app.startAllMicroservices();
 
-  // Start HTTP server for debug endpoints
   const httpPort = process.env.HTTP_PORT || 3001;
   await app.listen(httpPort);
 

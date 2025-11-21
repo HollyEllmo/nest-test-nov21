@@ -12,16 +12,16 @@ export class CorrelationIdInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const request = context.switchToHttp().getRequest();
     const response = context.switchToHttp().getResponse();
-    
+
     // Get or generate correlation ID
     const correlationId = request.headers['x-request-id'] || uuidv4();
-    
+
     // Add to request object
     request.correlationId = correlationId;
-    
+
     // Add to response headers
     response.setHeader('X-Request-Id', correlationId);
-    
+
     return next.handle();
   }
 }

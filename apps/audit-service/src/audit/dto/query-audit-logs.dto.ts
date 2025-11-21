@@ -9,7 +9,11 @@ import {
   Max,
 } from 'class-validator';
 
-export const AUDIT_ACTIONS = ['user_created', 'user_updated', 'user_deleted'] as const;
+export const AUDIT_ACTIONS = [
+  'user_created',
+  'user_updated',
+  'user_deleted',
+] as const;
 
 export class QueryAuditLogsDto {
   @ApiPropertyOptional({ default: 1, minimum: 1 })
