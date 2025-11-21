@@ -10,7 +10,7 @@ import { getDatabaseConfig } from '../config/database.config';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
+      envFilePath: 'apps/user-service/.env',
     }),
     SequelizeModule.forRootAsync({
       inject: [ConfigService],

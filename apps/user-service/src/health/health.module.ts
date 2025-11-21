@@ -13,7 +13,7 @@ import { HealthController } from './health.controller';
         transport: Transport.GRPC,
         options: {
           package: 'audit',
-          protoPath: join(__dirname, '../../../proto/src/audit.proto'),
+          protoPath: join(process.cwd(), 'dist/libs/proto/audit.proto'),
           url: process.env.AUDIT_SERVICE_URL || 'localhost:50051',
         },
       },

@@ -1,3 +1,9 @@
+import * as dotenv from 'dotenv';
+import { resolve } from 'path';
+
+// Load environment variables before anything else
+dotenv.config({ path: resolve(__dirname, '../../../.env') });
+
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';

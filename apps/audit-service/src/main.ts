@@ -1,3 +1,9 @@
+import * as dotenv from 'dotenv';
+import { resolve } from 'path';
+
+// Load environment variables before anything else
+dotenv.config({ path: resolve(__dirname, '../../.env') });
+
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { join } from 'path';
@@ -12,7 +18,7 @@ async function bootstrap() {
     transport: Transport.GRPC,
     options: {
       package: 'audit',
-      protoPath: join(__dirname, '../../proto/src/audit.proto'),
+      protoPath: join(process.cwd(), 'dist/libs/proto/audit.proto'),
       url: `0.0.0.0:${process.env.GRPC_PORT || 50051}`,
     },
   });
