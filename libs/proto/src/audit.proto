@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package audit;
+
+service AuditService {
+  rpc LogAction(LogActionRequest) returns (LogActionResponse);
+  rpc Ping(PingRequest) returns (PingResponse);
+}
+
+message LogActionRequest {
+  string action = 1;
+  int32 entity_type = 2;
+  string entity_id = 3;
+  string request_id = 4;
+  string timestamp = 5;
+}
+
+message LogActionResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message PingRequest {}
+
+message PingResponse {
+  string message = 1;
+}
