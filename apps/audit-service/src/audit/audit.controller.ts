@@ -4,6 +4,7 @@ import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { Metadata } from '@grpc/grpc-js';
 import { AuditService } from './audit.service';
 import { QueryAuditLogsDto } from './dto/query-audit-logs.dto';
+import { LogActionRequest } from '@app/proto/generated/audit';
 
 @Controller('audit')
 @ApiTags('audit')
@@ -11,16 +12,7 @@ export class AuditController {
   constructor(private readonly auditService: AuditService) {}
 
   @GrpcMethod('AuditService', 'LogAction')
-  async logAction(
-    data: {
-      action: string;
-      entityType: number;
-      entityId: string;
-      requestId: string;
-      timestamp: string;
-    },
-    metadata: Metadata,
-  ) {
+  async logAction(data: LogActionRequest, metadata: Metadata) {
     return this.auditService.logAction(data, metadata);
   }
 

@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { InjectModel } from '@nestjs/sequelize';
 import { AuditLog } from './models/audit-log.model';
 import { QueryAuditLogsDto } from './dto/query-audit-logs.dto';
+import { LogActionRequest } from '@app/proto/generated/audit';
 
 @Injectable()
 export class AuditService {
@@ -14,13 +15,7 @@ export class AuditService {
   ) {}
 
   async logAction(
-    data: {
-      action: string;
-      entityType: number;
-      entityId: string;
-      requestId: string;
-      timestamp: string;
-    },
+    data: LogActionRequest,
     metadata?: Metadata,
   ): Promise<{ success: boolean; message: string }> {
     try {
