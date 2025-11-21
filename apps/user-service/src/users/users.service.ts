@@ -13,18 +13,10 @@ import { Op } from 'sequelize';
 import { User } from './models/user.model';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import { QueryUsersDto, SORT_DIRECTIONS } from './dto/query-users.dto';
+import { LogActionRequest } from '@app/proto/generated/audit';
 
 interface AuditService {
-  logAction(
-    data: {
-      action: string;
-      entity_type: number;
-      entity_id: string;
-      request_id: string;
-      timestamp: string;
-    },
-    metadata?: Metadata,
-  ): any;
+  logAction(data: LogActionRequest, metadata?: Metadata): any;
 }
 
 enum AuditAction {
@@ -180,11 +172,11 @@ export class UsersService implements OnModuleInit {
         this.auditService.logAction(
           {
             action,
-            entity_type: AUDIT_ENTITY_USER,
-            entity_id: entityId,
-            request_id: requestId,
+            entityType: AUDIT_ENTITY_USER,
+            entityId,
+            requestId,
             timestamp: timestamp.toISOString(),
-          },
+          } as LogActionRequest,
           metadata,
         ),
       );

@@ -16,13 +16,6 @@ async function bootstrap() {
       package: 'audit',
       protoPath: join(process.cwd(), 'dist/libs/proto/audit.proto'),
       url: `0.0.0.0:${process.env.GRPC_PORT || 50051}`,
-      loader: {
-        keepCase: true,
-        longs: String,
-        enums: String,
-        defaults: true,
-        oneofs: true,
-      },
     },
   });
 

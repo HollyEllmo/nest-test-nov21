@@ -14,9 +14,9 @@ export class AuditController {
   async logAction(
     data: {
       action: string;
-      entity_type: number;
-      entity_id: string;
-      request_id: string;
+      entityType: number;
+      entityId: string;
+      requestId: string;
       timestamp: string;
     },
     metadata: Metadata,

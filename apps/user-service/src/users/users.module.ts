@@ -17,13 +17,6 @@ import { User } from './models/user.model';
           package: 'audit',
           protoPath: join(process.cwd(), 'dist/libs/proto/audit.proto'),
           url: process.env.AUDIT_SERVICE_URL || 'localhost:50051',
-          loader: {
-            keepCase: true,
-            longs: String,
-            enums: String,
-            defaults: true,
-            oneofs: true,
-          },
         },
       },
     ]),
