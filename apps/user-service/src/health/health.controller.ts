@@ -1,13 +1,13 @@
 import { Controller, Get } from '@nestjs/common';
 import {
   HealthCheckService,
-  HttpHealthIndicator,
   HealthCheck,
   SequelizeHealthIndicator,
 } from '@nestjs/terminus';
 import { Inject } from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
+import { Public } from '../auth/public.decorator';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 
 interface AuditService {
@@ -15,6 +15,7 @@ interface AuditService {
 }
 
 @Controller('health')
+@Public()
 @ApiTags('health')
 export class HealthController {
   private auditService: AuditService;
@@ -26,7 +27,8 @@ export class HealthController {
   ) {}
 
   onModuleInit() {
-    this.auditService = this.auditClient.getService<AuditService>('AuditService');
+    this.auditService =
+      this.auditClient.getService<AuditService>('AuditService');
   }
 
   @Get('live')
@@ -38,7 +40,9 @@ export class HealthController {
 
   @Get('ready')
   @HealthCheck()
-  @ApiOkResponse({ description: 'Readiness probe with DB and audit-service checks' })
+  @ApiOkResponse({
+    description: 'Readiness probe with DB and audit-service checks',
+  })
   async checkReady() {
     return this.health.check([
       () => this.db.pingCheck('database'),
