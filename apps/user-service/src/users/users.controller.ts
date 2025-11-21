@@ -12,6 +12,7 @@ import {
 import {
   ApiBadRequestResponse,
   ApiCreatedResponse,
+  ApiConflictResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiTags,
@@ -31,6 +32,7 @@ export class UsersController {
   @Post()
   @ApiCreatedResponse({ description: 'User created', type: UserResponseDto })
   @ApiBadRequestResponse({ description: 'Validation failed' })
+  @ApiConflictResponse({ description: 'User with this email already exists' })
   create(
     @Body() createUserDto: CreateUserDto,
     @CorrelationId() correlationId: string,
@@ -54,6 +56,7 @@ export class UsersController {
   @Patch(':id')
   @ApiOkResponse({ description: 'Update user', type: UserResponseDto })
   @ApiBadRequestResponse({ description: 'Validation failed' })
+  @ApiConflictResponse({ description: 'User with this email already exists' })
   @ApiNotFoundResponse({ description: 'User not found' })
   update(
     @Param('id') id: string,

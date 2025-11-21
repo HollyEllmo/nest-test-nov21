@@ -12,6 +12,8 @@
 4. Запустить сервисы:
    - `npm run start:user-service` (HTTP 3000, Swagger `/docs`, health `/health/live`, `/health/ready`)
    - `npm run start:audit-service` (HTTP 3001, gRPC 50051, HTTP `/audit/logs`)
+5. Документация (Swagger):
+   - user-service: `http://localhost:3000/docs` (public)
 
 ### Запуск в Docker
 

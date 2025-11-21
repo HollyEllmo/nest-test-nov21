@@ -3,6 +3,8 @@ import {
   Inject,
   OnModuleInit,
   NotFoundException,
+  ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { ClientGrpc } from '@nestjs/microservices';
@@ -10,6 +12,7 @@ import { Metadata } from '@grpc/grpc-js';
 import { firstValueFrom } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { Op } from 'sequelize';
+import { UniqueConstraintError } from 'sequelize';
 import { User } from './models/user.model';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import { QueryUsersDto, SORT_DIRECTIONS } from './dto/query-users.dto';
@@ -46,14 +49,21 @@ export class UsersService implements OnModuleInit {
     createUserDto: CreateUserDto,
     correlationId: string,
   ): Promise<User> {
-    const user = await this.userModel.create(createUserDto as any);
-    await this.logAuditEvent(
-      AuditAction.UserCreated,
-      user.id,
-      correlationId,
-      user.createdAt,
-    );
-    return user;
+    try {
+      const user = await this.userModel.create(createUserDto as any);
+      await this.logAuditEvent(
+        AuditAction.UserCreated,
+        user.id,
+        correlationId,
+        user.createdAt,
+      );
+      return user;
+    } catch (error) {
+      if (error instanceof UniqueConstraintError) {
+        throw new ConflictException('User with this email already exists');
+      }
+      throw error;
+    }
   }
 
   async findAll(
@@ -129,11 +139,21 @@ export class UsersService implements OnModuleInit {
     updateUserDto: UpdateUserDto,
     correlationId: string,
   ): Promise<User> {
+    if (!updateUserDto || Object.keys(updateUserDto).length === 0) {
+      throw new BadRequestException('At least one field must be provided');
+    }
     const user = await this.userModel.findByPk(id);
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    await user.update(updateUserDto as any);
+    try {
+      await user.update(updateUserDto as any);
+    } catch (error) {
+      if (error instanceof UniqueConstraintError) {
+        throw new ConflictException('User with this email already exists');
+      }
+      throw error;
+    }
     await this.logAuditEvent(
       AuditAction.UserUpdated,
       user.id,
